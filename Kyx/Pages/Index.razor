@@ -1,0 +1,146 @@
+﻿@page "/"
+
+@inject MessageService _message
+
+@inject ImageResizeService _imageResizeService
+
+@using System.ComponentModel.DataAnnotations;
+@using System.Text.Json;
+@using System.IO
+@using Kyx.Data
+
+<Form @ref="form"
+Class="upload"
+Model="@model"
+OnFinish="OnFinish"
+OnFinishFailed="OnFinishFailed"
+LabelColSpan="8"
+WrapperColSpan="16">
+
+    <FormItem Label="Source Path">
+        <Input @bind-Value="@context.Path" Style="width: 90%" />
+        <Tooltip Title=@("Path of source images folder")>
+            <Icon Type="question-circle" Theme="fill" />
+        </Tooltip>
+    </FormItem>
+
+    <FormItem Label="Export Path">
+        <Input @bind-Value="@context.ExportPath" Style="width: 90%" />
+        <Tooltip Title=@("Path of export directory")>
+            <Icon Type="question-circle" Theme="fill" />
+        </Tooltip>
+    </FormItem>
+
+
+    <FormItem Label="Width">
+        <AntDesign.InputNumber @bind-Value="@context.Width" />
+        <Tooltip Title=@("Desired image width")>
+            <Icon Type="question-circle" Theme="fill" />
+        </Tooltip>
+    </FormItem>
+
+    <FormItem Label="Height">
+        <AntDesign.InputNumber @bind-Value="@context.Height" />
+        <Tooltip Title=@("Desired image height")>
+            <Icon Type="question-circle" Theme="fill" />
+        </Tooltip>
+    </FormItem>
+
+    <FormItem WrapperColOffset="8" WrapperColSpan="16">
+        <Button Type="@ButtonType.Primary" HtmlType="submit">
+            Resize
+        </Button>
+        <Button OnClick="Reset">
+            Reset
+        </Button>
+
+    </FormItem>
+</Form>
+<div class="copyright">
+    <Title Level="4">Made with ❤ by Kyx</Title>
+</div>
+@code
+{
+    public class Model
+    {
+        [Required(AllowEmptyStrings = false)]
+        public string Path { get; set; } = "C:/";
+
+        [Required(AllowEmptyStrings = false)]
+        public string ExportPath { get; set; } = "C:/";
+
+        [Required]
+        public int Width { get; set; } = 512;
+        [Required]
+        public int Height { get; set; } = 322;
+    }
+
+
+
+    private Model model = new Model();
+    private Form<Model> form;
+
+
+
+    private void OnFill(MouseEventArgs args)
+    {
+        model.Path = "Hello world!";
+
+        Console.WriteLine($"form ref:{form}");
+    }
+
+    private void Reset(MouseEventArgs args)
+    {
+        form.Reset();
+    }
+
+    private void OnFinish(EditContext editContext)
+    {
+        Console.WriteLine($"Success:{JsonSerializer.Serialize(model)}");
+      
+        var result = _imageResizeService.ResizeFolder(model.Path, model.ExportPath, (float)model.Width, (float)model.Height);
+        if (result.Success)
+        {
+            _message.Success(result.ErrorMessage);
+        }
+        else
+
+        {
+            _message.Error(result.ErrorMessage);
+        }
+    }
+
+    private void OnFinishFailed(EditContext editContext)
+    {
+        Console.WriteLine($"Failed:{JsonSerializer.Serialize(model)}");
+    }
+
+    public class ResponseModel
+    {
+        public string name { get; set; }
+
+        public string status { get; set; }
+
+        public string url { get; set; }
+
+        public string thumbUrl { get; set; }
+    }
+
+}
+<style>
+    .upload {
+    padding:10px;
+    }
+
+    .avatar-uploader > .ant-upload {
+    width: 128px;
+    height: 128px;
+    }
+
+    .copyright{
+    position: fixed;
+    bottom:0px;
+    text-align:center;
+    width:100%;
+    }
+</style>
