@@ -7,6 +7,7 @@
 @using System.ComponentModel.DataAnnotations;
 @using System.Text.Json;
 @using System.IO
+@using ElectronNET.API
 @using Kyx.Data
 
 <Form @ref="form"
@@ -18,14 +19,16 @@ LabelColSpan="8"
 WrapperColSpan="16">
 
     <FormItem Label="Source Path">
-        <Input @bind-Value="@context.Path" Style="width: 90%" />
+        <Input @bind-Value="@context.Path" Style="width: 70%" />
+        <Button OnClick="OnSelectFolder">Browse</Button>
         <Tooltip Title=@("Path of source images folder")>
             <Icon Type="question-circle" Theme="fill" />
         </Tooltip>
     </FormItem>
 
     <FormItem Label="Export Path">
-        <Input @bind-Value="@context.ExportPath" Style="width: 90%" />
+        <Input @bind-Value="@context.ExportPath" Style="width: 70%" />
+        <Button OnClick="OnSelectExportFolder">Browse</Button>
         <Tooltip Title=@("Path of export directory")>
             <Icon Type="question-circle" Theme="fill" />
         </Tooltip>
@@ -80,6 +83,29 @@ WrapperColSpan="16">
     private Model model = new Model();
     private Form<Model> form;
 
+    public async void OnSelectFolder()
+    {
+
+        var folder = await _imageResizeService.OnSelectFolder();
+        if (!string.IsNullOrEmpty(folder))
+        {
+            model.Path = folder;
+            StateHasChanged();
+        }
+
+    }
+
+    public async void OnSelectExportFolder()
+    {
+
+        var folder = await _imageResizeService.OnSelectExportFolder();
+        if (!string.IsNullOrEmpty(folder))
+        {
+            model.ExportPath = folder;
+            StateHasChanged();
+        }
+
+    }
 
 
     private void OnFill(MouseEventArgs args)
@@ -94,19 +120,25 @@ WrapperColSpan="16">
         form.Reset();
     }
 
-    private void OnFinish(EditContext editContext)
+    private async Task OnFinish(EditContext editContext)
     {
         Console.WriteLine($"Success:{JsonSerializer.Serialize(model)}");
-      
+
         var result = _imageResizeService.ResizeFolder(model.Path, model.ExportPath, (float)model.Width, (float)model.Height);
         if (result.Success)
         {
-            _message.Success(result.ErrorMessage);
+            await _message.Success(result.ErrorMessage);
+            var err = await Electron.Shell.OpenPathAsync(model.ExportPath);
+            if (!string.IsNullOrEmpty(err))
+            {
+                Console.WriteLine(err);
+            }
+
         }
         else
 
         {
-            _message.Error(result.ErrorMessage);
+            await _message.Error(result.ErrorMessage);
         }
     }
 

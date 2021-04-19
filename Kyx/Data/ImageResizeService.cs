@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
 using SkiaSharp;
+using ElectronNET.API;
+using ElectronNET.API.Entities;
 
 namespace Kyx.Data
 {
@@ -14,6 +16,32 @@ namespace Kyx.Data
         public ImageResizeService()
         {
 
+        }
+
+        public async Task<string> OnSelectFolder()
+        {
+            var mainWindow = Electron.WindowManager.BrowserWindows.First();
+            var folders = await Electron.Dialog.ShowOpenDialogAsync(mainWindow, new ElectronNET.API.Entities.OpenDialogOptions() { Properties = new ElectronNET.API.Entities.OpenDialogProperty[] { ElectronNET.API.Entities.OpenDialogProperty.openDirectory } });
+            if (folders.Length > 0)
+            {
+                return folders[0];
+            }
+            return String.Empty;
+        }
+
+        public async Task<string> OnSelectExportFolder()
+        {
+            var mainWindow = Electron.WindowManager.BrowserWindows.First();
+            OpenDialogOptions options = new OpenDialogOptions()
+            {
+                Properties = new ElectronNET.API.Entities.OpenDialogProperty[] { ElectronNET.API.Entities.OpenDialogProperty.openDirectory }
+            };
+            var folders = await Electron.Dialog.ShowOpenDialogAsync(mainWindow, options);
+            if (folders.Length > 0)
+            {
+                return folders[0];
+            }
+            return String.Empty;
         }
 
         public ResizeResult ResizeFolder(string directoryPath, string directoryExportPath, float width, float height)

@@ -30,7 +30,6 @@ namespace Kyx
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<ImageResizeService>();
             services.AddAntDesign();
         }
